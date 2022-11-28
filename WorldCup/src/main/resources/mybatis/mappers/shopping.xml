@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 다른 파일의 SQL문과 구분하기 위해 -->
+<mapper namespace="mapper.shopping">
+	<resultMap type="shoppingVO" id="shopResult">
+		<result property="i_num" column="i_num"/>
+		<result property="i_name" column="i_name"/>
+		<result property="i_price" column="i_price"/>
+		<result property="i_content" column="i_content"/>
+		<result property="i_img" column="i_img"/>
+		<result property="i_amount" column="i_amount"/>
+	</resultMap>
+	
+
+	<!-- 전체 상품목록 보기 + 페이징 -->
+	<select id="listItems" resultMap="shopResult" parameterType="hashMap">
+	
+		 select * from (select ROWNUM as rNum, i_name, i_price, i_img 
+		  from(select distinct(i_name), i_price, i_img from item_list 
+		  <choose>
+		  	<when test="category != null and category != ''">
+		  		 where substr(i_num,1,1) = #{category}
+		  	</when>
+		  </choose> 
+		
+		<![CDATA[
+			order by i_img)) where rNum between (#{section}-1)*90 + (#{pageNum}-1)*9 + 1 and (#{section}-1)*90 + #{pageNum}*9
+		]]>
+	</select>	
+	
+	<!-- 상품 이름으로 상품번호를 받아오는 메소드 -->
+	<select id="itemNo" resultType="int" parameterType="String">
+		<![CDATA[
+		  select i_num from (select i_num from item_list where i_name=#{value} order by i_num) where rownum=1
+		]]>
+	</select>
+	
+	
+	<!-- 전체 글 목록 수 를 가져오는 메소드 -->
+	<select id="selectTotArticles" resultType="int" parameterType="int">
+		select count(distinct i_name) from item_list
+			<choose>
+				<when test="value != null and value != ''">
+					 where substr(i_num,1,1) = #{value}
+				</when>
+			</choose>
+	</select>
+</mapper>
